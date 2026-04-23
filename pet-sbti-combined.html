@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>PBTI - 宠物性格测试 / 养宠推荐</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #FFB6C1 0%, #DDA0DD 50%, #B0C4DE 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .container {
+            max-width: 420px;
+            margin: 0 auto;
+        }
+
+        .page {
+            display: none;
+            background: white;
+            border-radius: 24px;
+            padding: 25px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.1);
+            animation: fadeIn 0.5s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 封面页 */
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo-emoji {
+            font-size: 60px;
+            margin-bottom: 10px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .logo h1 {
+            font-size: 28px;
+            color: #5D4E6D;
+            margin-bottom: 5px;
+        }
+
+        .logo p {
+            color: #888;
+            font-size: 13px;
+        }
+
+        .intro-text {
+            background: linear-gradient(135deg, #FFF5F8 0%, #F8F0FF 100%);
+            padding: 15px;
+            border-radius: 14px;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .intro-text p {
+            color: #666;
+            line-height: 1.7;
+            font-size: 14px;
+        }
+
+        .pet-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 15px 0;
+        }
+
+        .test-type-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .test-type-tab {
+            flex: 1;
+            padding: 10px 8px;
+            border: 2px solid #f0f0f0;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.3s ease;
+            font-size: 13px;
+            color: #666;
+        }
+
+        .test-type-tab:hover {
+            border-color: #DDA0DD;
+        }
+
+        .test-type-tab.active {
+            border-color: #DDA0DD;
+            background: linear-gradient(135deg, #FFF5F8 0%, #F8F0FF 100%);
+            color: #5D4E6D;
+            font-weight: 600;
+        }
+
+        .test-type-tab .emoji {
+            display: block;
+            font-size: 22px;
+            margin-bottom: 4px;
+        }
+
+        .pet-card {
+            padding: 18px 12px;
+            border: 3px solid #f0f0f0;
+            border-radius: 14px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .pet-card:hover {
+            border-color: #DDA0DD;
+            transform: translateY(-2px);
+        }
+
+        .pet-card.selected {
+            border-color: #DDA0DD;
+            background: linear-gradient(135deg, #FFF5F8 0%, #F8F0FF 100%);
+        }
+
+        .pet-card .emoji {
+            font-size: 40px;
+            display: block;
+            margin-bottom: 6px;
+        }
+
+        .pet-card .name {
+            font-size: 16px;
+            font-weight: 600;
+            color: #5D4E6D;
+        }
+
+        .start-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #FFB6C1 0%, #DDA0DD 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            margin-top: 15px;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(221,160,221,0.4);
+        }
+
+        .start-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .footer-text {
+            text-align: center;
+            color: #aaa;
+            font-size: 12px;
+            margin-top: 15px;
+        }
+
+        /* 问题页 */
+        .progress-bar {
+            height: 5px;
+            background: #f0f0f0;
+            border-radius: 3px;
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #FFB6C1, #DDA0DD);
+            border-radius: 3px;
+            transition: width 0.4s ease;
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #DDA0DD;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .question-text {
+            font-size: 17px;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option {
+            padding: 14px 16px;
+            border: 2px solid #f0f0f0;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .option:hover {
+            border-color: #DDA0DD;
+            background: #FFF8FF;
+        }
+
+        .option.selected {
+            border-color: #DDA0DD;
+            background: linear-gradient(135deg, #FFF5F8 0%, #F8F0FF 100%);
+        }
+
+        .option-text {
+            font-size: 14px;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .option.selected .option-text {
+            color: #5D4E6D;
+            font-weight: 500;
+        }
+
+        /* 结果页 */
+        .result-header {
+            text-align: center;
+            padding: 10px 0 15px;
+        }
+
+        .result-emoji {
+            font-size: 60px;
+            margin-bottom: 10px;
+        }
+
+        .result-type {
+            font-size: 26px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #FFB6C1, #DDA0DD);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 5px;
+        }
+
+        .result-subtitle {
+            font-size: 13px;
+            color: #999;
+        }
+
+        .result-score {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .score-item {
+            text-align: center;
+            padding: 8px 12px;
+            background: #f8f8f8;
+            border-radius: 10px;
+        }
+
+        .score-label {
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 3px;
+        }
+
+        .score-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: #5D4E6D;
+        }
+
+        .result-desc {
+            background: linear-gradient(135deg, #FFF5F8 0%, #F8F0FF 100%);
+            padding: 16px;
+            border-radius: 14px;
+            margin: 12px 0;
+        }
+
+        .result-desc h3 {
+            font-size: 14px;
+            color: #DDA0DD;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .result-desc p {
+            font-size: 13px;
+            color: #555;
+            line-height: 1.7;
+        }
+
+        .action-btns {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 18px;
+        }
+
+        .share-btn {
+            padding: 13px;
+            background: linear-gradient(135deg, #FFB6C1 0%, #DDA0DD 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .retry-btn {
+            padding: 13px;
+            background: #f5f5f5;
+            color: #666;
+            border: none;
+            border-radius: 50px;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        @media (max-width: 360px) {
+            body { padding: 10px; }
+            .page { padding: 18px 14px; border-radius: 20px; }
+            .logo h1 { font-size: 24px; }
+            .question-text { font-size: 15px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 封面页 -->
+        <div id="page-start" class="page active">
+            <div class="logo">
+                <div class="logo-emoji">🐾</div>
+                <h1>PBTI</h1>
+                <p>测测你家主子的性格密码</p>
+            </div>
+
+            <div class="intro-text" id="introText">
+                <p id="introContent">
+                    就像人类的MBTI一样<br>
+                    每只宠物都有独特的性格密码<br>
+                    <strong style="color:#DDA0DD">16道题</strong> 揭秘你家主子的真实性格
+                </p>
+            </div>
+
+            <!-- 测试类型切换 -->
+            <div class="test-type-tabs">
+                <div class="test-type-tab active" onclick="switchTestType('personality', this)">
+                    <span class="emoji">🧬</span>
+                    性格测试
+                </div>
+                <div class="test-type-tab" onclick="switchTestType('recommend', this)">
+                    <span class="emoji">🏠</span>
+                    养宠推荐
+                </div>
+            </div>
+
+            <p style="text-align:center;color:#888;font-size:13px;margin-bottom:10px;">
+                先选择你家宠物的类型：
+            </p>
+
+            <div class="pet-grid">
+                <div class="pet-card" onclick="selectPet('cat', this)">
+                    <span class="emoji">🐱</span>
+                    <span class="name">猫咪</span>
+                </div>
+                <div class="pet-card" onclick="selectPet('dog', this)">
+                    <span class="emoji">🐶</span>
+                    <span class="name">狗狗</span>
+                </div>
+                <div class="pet-card" onclick="selectPet('bird', this)">
+                    <span class="emoji">🐦</span>
+                    <span class="name">鸟类</span>
+                </div>
+                <div class="pet-card" onclick="selectPet('reptile', this)">
+                    <span class="emoji">🦎</span>
+                    <span class="name">爬宠</span>
+                </div>
+            </div>
+
+            <button class="start-btn" id="startBtn" disabled onclick="startTest()">
+                开始测试 →
+            </button>
+
+            <div class="footer-text">
+                🐾 完全免费 · 无需注册 · 离线可用
+            </div>
+        </div>
+
+        <!-- 问题页 -->
+        <div id="page-question" class="page">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-text" id="progressText">第 1/16 题</div>
+
+            <div class="question-text" id="questionText"></div>
+
+            <div class="options" id="options"></div>
+        </div>
+
+        <!-- 结果页 -->
+        <div id="page-result" class="page">
+            <div class="result-header">
+                <div class="result-emoji" id="resultEmoji">🐱</div>
+                <div class="result-type" id="resultType">全能猫猫</div>
+                <div class="result-subtitle" id="resultSubtitle">完美猫猫，猫界天花板</div>
+            </div>
+
+            <div class="result-score" id="resultScore"></div>
+
+            <div class="result-desc">
+                <h3>📖 性格解读</h3>
+                <p id="resultDesc"></p>
+            </div>
+
+            <div class="result-desc">
+                <h3>💡 铲屎官指南</h3>
+                <p id="resultTips"></p>
+            </div>
+
+            <div class="action-btns">
+                <button class="share-btn" onclick="shareResult()">📤 分享给朋友</button>
+                <button class="retry-btn" onclick="retryTest()">🔄 再测一次</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 宠物数据
+        const petData = {
+            cat: {
+                emoji: '🐱',
+                name: '猫咪',
+                questions: [
+                    // 社交模式 - 4题
+                    { dim: '社交模式', question: '家里来了陌生人，主子会？', options: [
+                        { text: '大摇大摆凑过去闻闻', value: 'S_A' },
+                        { text: '躲在角落暗中观察', value: 'S_I' }
+                    ]},
+                    { dim: '社交模式', question: '带猫出门（去医院/洗澡），它会？', options: [
+                        { text: '该吃吃该玩玩，适应力强', value: 'S_A' },
+                        { text: '蜷成一团瑟瑟发抖', value: 'S_I' }
+                    ]},
+                    { dim: '社交模式', question: '有人按门铃/敲门，主子会？', options: [
+                        { text: '大声喵叫回应或冲过去', value: 'S_A' },
+                        { text: '完全没反应继续睡', value: 'S_I' }
+                    ]},
+                    { dim: '社交模式', question: '开门倒垃圾时，主子会？', options: [
+                        { text: '趁机冲出去探索世界', value: 'S_A' },
+                        { text: '守在家门口或者躲远', value: 'S_I' }
+                    ]},
+                    // 能量水平 - 4题（直接问活跃程度）
+                    { dim: '能量水平', question: '你家猫大多数时候是什么状态？', options: [
+                        { text: '跑来跑去、跳上跳下、停不下来', value: 'E_H' },
+                        { text: '躺着或趴着为主', value: 'E_L' }
+                    ]},
+                    { dim: '能量水平', question: '下班回家，它通常在干嘛？', options: [
+                        { text: '精力充沛跑酷迎接', value: 'E_H' },
+                        { text: '慢悠悠走过来或者躺着看你', value: 'E_L' }
+                    ]},
+                    { dim: '能量水平', question: '给它玩具/逗猫棒，它会？', options: [
+                        { text: '疯狂扑咬，玩到喘气都不想停', value: 'E_H' },
+                        { text: '玩两下就没兴趣了', value: 'E_L' }
+                    ]},
+                    { dim: '能量水平', question: '你观察到的总活跃程度？', options: [
+                        { text: '超级活跃，是个运动健将', value: 'E_H' },
+                        { text: '一般活跃或偏安静', value: 'E_L' }
+                    ]},
+                    // 依赖程度 - 4题
+                    { dim: '依赖程度', question: '你下班回家，主子会？', options: [
+                        { text: '喵喵叫+疯狂蹭腿迎接', value: 'D_D' },
+                        { text: '抬眼看你一下继续躺', value: 'D_I' }
+                    ]},
+                    { dim: '依赖程度', question: '你在家的时候，主子喜欢待在你附近吗？', options: [
+                        { text: '必须贴着你才安心', value: 'D_D' },
+                        { text: '喜欢待在离你远的地方', value: 'D_I' }
+                    ]},
+                    { dim: '依赖程度', question: '你出门一整天回来，主子会？', options: [
+                        { text: '一顿狂撸求关注', value: 'D_D' },
+                        { text: '淡定得像你没离开过', value: 'D_I' }
+                    ]},
+                    { dim: '依赖程度', question: '平时你陪它玩，它表现？', options: [
+                        { text: '很享受，会主动找你玩', value: 'D_D' },
+                        { text: '可有可无，自己待着也挺好', value: 'D_I' }
+                    ]},
+                    // 聪明程度 - 4题
+                    { dim: '聪明程度', question: '你家猫学新技能/记住新指令快不快？', options: [
+                        { text: '教两遍就会举一反三', value: 'C_C' },
+                        { text: '怎么教都一脸问号', value: 'C_S' }
+                    ]},
+                    { dim: '聪明程度', question: '它会不会用各种方式表达需求？', options: [
+                        { text: '会！叫声/动作都很聪明', value: 'C_C' },
+                        { text: '不会，就知道吃饭', value: 'C_S' }
+                    ]},
+                    { dim: '聪明程度', question: '你心情不好时，它会？', options: [
+                        { text: '来蹭你、陪你', value: 'C_C' },
+                        { text: '没什么反应', value: 'C_S' }
+                    ]},
+                    { dim: '聪明程度', question: '你观察到的总智商？', options: [
+                        { text: '很聪明，像个小人精', value: 'C_C' },
+                        { text: '傻乎乎的，很单纯', value: 'C_S' }
+                    ]}
+                ],
+                personalities: {
+                    'EADA': { type: '全能猫猫', subtitle: '完美猫猫，猫界天花板', desc: '你家猫简直是猫咪界的六边形战士！社交满分、精力充沛、粘人又聪明。它们能准确读懂你的情绪，会在你难过时安慰你，也会用各种聪明的小技巧和你斗智斗勇。养到这样的猫，上辈子一定拯救了银河系！', tips: '继续保持这份完美关系！多给它一些挑战性的玩具满足智力需求，定期安排社交活动让它发挥社交天赋。' },
+                    'EADS': { type: '活力小甜心', subtitle: '精力旺盛，粘人又可爱', desc: '你家猫是个活力满满的小可爱！每天像装了电池一样到处跑酷，但同时又超级粘你，是个离不开人的小跟班。智商可能一般，但那份热情和爱意是满分！', tips: '每天用逗猫棒陪它消耗精力至少30分钟。准备多个玩具让它发泄精力。多陪它玩，它最喜欢和你互动了！' },
+                    'EACD': { type: '活力小话痨', subtitle: '话多精力旺，爱凑热闹', desc: '你家猫是个话痨+人来疯的结合体！精力旺盛到可怕，一天到晚喵喵叫个不停。家里来客人它比谁都兴奋，走哪儿跟哪儿，恨不得帮客人开门。智商可能不太够用，但绝对是最热情的那个！', tips: '每天用逗猫棒陪它消耗精力至少30分钟。给它准备发声玩具满足表达欲。客人来时让它自由发挥社交天赋。' },
+                    'EACS': { type: '淘气小恶魔', subtitle: '活泼好动，拆家小能手', desc: '你家猫是个小恶魔！精力旺盛到可怕，什么都要挠一挠、咬一咬、拆一拆。虽然经常闯祸，但那双天真无邪的大眼睛和永不枯竭的活力让你根本生不起气来。', tips: '收好易碎品和危险物品，多准备玩具满足破坏欲。给它准备猫抓板和耐咬玩具。消耗精力后它会安静很多。' },
+                    'EICI': { type: '探险大王', subtitle: '自信大胆，世界都是我的', desc: '你家猫是个天生的探险家！独立、自信、胆大包天。陌生人来了？不存在的，这就是它的地盘。家里每个角落都要巡视，每样新东西都要研究。养它就像养了只小型老虎，时刻充满野性魅力。', tips: '封窗封阳台！准备猫爬架满足登高欲望。看到它"咔咔"抓窗不要阻止，这是它的野性本能。' },
+                    'EICS': { type: '好奇宝宝', subtitle: '活泼好动，什么都想碰', desc: '你家猫对世界充满好奇，智商可能不太够用但好奇心绝对爆棚。什么东西都要闻一闻、挠一挠、咬一咬。虽然经常闯祸，但那双天真无邪的大眼睛让你根本生不起气来。', tips: '收好易碎品和危险物品，多准备玩具满足探索欲。给它一个安全的"探险区"，定期更新玩具保持新鲜感。' },
+                    'ECDA': { type: '活力小棉袄', subtitle: '运动健将+粘人精', desc: '你家猫既有运动员的体魄，又有小棉袄的温暖！精力充沛但只粘着你，跑酷完了就要蹭你求抱抱。聪明又贴心，是猫界的完美组合。', tips: '准备各种运动玩具消耗精力。经常陪它互动玩耍。建立深厚的默契，它会很依赖你。' },
+                    'ECD': { type: '活力小天使', subtitle: '聪明活泼，完美小猫', desc: '你家猫简直是来报恩的！精力充沛但不会过度闹腾，聪明到能和你斗智斗勇，同时又很粘人。是那种别人看了都羡慕的完美小猫！', tips: '保持现状！它是完美的伙伴。多和它互动，建立更深的感情。' },
+                    'EQDA': { type: '小棉袄', subtitle: '安静陪伴，温暖治愈', desc: '你家猫是安静版的粘人精！不吵不闹但一定要待在你身边。你工作时它趴在桌上陪着你，你睡觉时它缩在被角守着你。不需要太多互动，但那份安静的陪伴是最珍贵的存在。', tips: '给它准备一个靠近你的舒适窝。保持安静的环境，不要强迫互动。它们用沉默表达爱意。' },
+                    'EQDC': { type: '安静天使', subtitle: '岁月静好，不争不抢', desc: '你家猫是来报恩的吧！安安静静、不吵不闹、不拆家不闹腾。永远一副岁月静好的样子，看一眼就觉得治愈。吃饭慢慢吃，睡觉好好睡，乖巧得让人心疼。', tips: '不要打扰它的岁月静好！给它安静舒适的环境，定期体检确保健康。这种猫是捡到宝。' },
+                    'EQIC': { type: '独行智者', subtitle: '高冷有内涵，智商在线', desc: '你家猫是个有故事的女同学！高冷、聪明、有主见。想理你的时候自然会来找你，不想理的时候叫破喉咙也没用。但它的聪明是真的，能记住你骂它的每一句话然后记仇报复。', tips: '尊重它的高冷，不要过度打扰。建立平等的友谊而不是主仆关系。用零食收买比叫名字更有效。' },
+                    'IQIC': { type: '高冷智者', subtitle: '独来独往，智商爆表', desc: '你家猫是个独行侠！智商高、性格独立，不爱社交也不粘人。它有自己的世界，聪明到能完美操控你为它服务。养它需要智慧，因为它才是真正的主人。', tips: '尊重它的独立性。用零食和智慧收买它。准备好被它操控的准备。' },
+                    'IAIS': { type: '活力独行侠', subtitle: '精力旺盛但不亲人', desc: '你家猫是个精力充沛的小马达，整天跑酷、跳上跳下，但就是不粘你。你想抱它它早就跑了，只有它想找你的时候才会过来。它有自己的小世界，活力满满却不羁。', tips: '给它准备猫爬架和大量玩具，让它自己消耗精力。尊重它的独立性，它愿意亲近你的时候自然会的。' },
+                    'IAIC': { type: '高冷运动员', subtitle: '聪明又活泼，就是高冷', desc: '你家猫是个聪明的小运动员！身手矫健、反应敏捷、学东西快。可惜性格高冷，不想理你的时候怎么叫都没用。它有自己的想法，是个难以捉摸的小家伙。', tips: '用零食和它斗智斗勇。建立平等的友谊，它会用自己的方式认可你。准备挑战性的玩具满足它的智力需求。' },
+                    'IADC': { type: '粘人小傲娇', subtitle: '嘴硬心软，表面冷淡内心火热', desc: '你家猫是个矛盾体！明明很怕陌生人，但又很粘你。表面上对你爱答不理，实际上你走哪它跟到哪。容易应激但又渴望关注，是个需要耐心呵护的小傲娇。', tips: '给它足够的独处空间作为安全感来源。不要强迫它社交，慢慢建立信任。用零食和温柔语气接近它。' },
+                    'IACS': { type: '社恐小可爱', subtitle: '害羞内敛，单纯可爱', desc: '你家猫是个害羞的小可爱！对外人很紧张，但对你是真爱。智商可能一般，但那份单纯的依赖让人心软。它需要你的保护和耐心陪伴。', tips: '给它足够的独处空间。不要强迫它见陌生人。在它熟悉的领域里陪伴它。' },
+                    'IQDS': { type: '超级跟屁虫', subtitle: '你是唯一，走哪跟哪', desc: '你家猫是重度分离焦虑症患者！离开你三米就开始焦虑，哪怕你只是去倒杯水。它不需要狗朋友，有你就够了。你是它的全世界，唯一的全世界。', tips: '进行适当的分离训练，准备有你气味的物品在它身边。出门前不要过度告别，回家时也不要一通狂撸。培养它的独立性。' },
+                    'IQIS': { type: '躺平之王', subtitle: '猫生如梦，能躺绝不坐', desc: '你家猫是猫界躺平代言人！能躺着绝不坐着，能睡着绝不醒着。对外界的一切都提不起兴趣，仿佛参透了猫生真谛。它不是不聪明，只是不想动脑子。', tips: '定期体检关注体重和健康。准备多个舒适的窝放在不同位置。它选择躺平你就让它躺，这是它的猫生态度。' },
+                    'IQIA': { type: '独行侠', subtitle: '独来独往，自由万岁', desc: '你家猫是个彻底的独行侠！不需要社交，不需要依赖，就喜欢自己待着。它有自己完整的精神世界，你只是它生活中的一个住客而已。', tips: '尊重它的独立性。准备好食物和水就够了。不要试图强行抱它，让它按自己的节奏生活。' }
+                }
+            },
+            dog: {
+                emoji: '🐶',
+                name: '狗狗',
+                questions: [
+                    // 社交模式 - 4题
+                    { dim: '社交模式', question: '家里来了陌生人，主子会？', options: [
+                        { text: '热情迎接摇尾巴', value: 'S_A' },
+                        { text: '躲在角落警惕或狂吠', value: 'S_I' }
+                    ]},
+                    { dim: '社交模式', question: '带狗出门遛弯，它见到其他狗会？', options: [
+                        { text: '冲过去想玩，想社交', value: 'S_A' },
+                        { text: '狂吠或躲避，不喜欢', value: 'S_I' }
+                    ]},
+                    { dim: '社交模式', question: '有人按门铃，主子会？', options: [
+                        { text: '激动转圈想开门', value: 'S_A' },
+                        { text: '淡定或者狂吠', value: 'S_I' }
+                    ]},
+                    { dim: '社交模式', question: '带狗去宠物店/公园，它会？', options: [
+                        { text: '主动社交自来熟', value: 'S_A' },
+                        { text: '紧张躲在你身后', value: 'S_I' }
+                    ]},
+                    // 能量水平 - 4题
+                    { dim: '能量水平', question: '你家狗大多数时候是什么状态？', options: [
+                        { text: '跑来跑去、跳来跳去、停不下来', value: 'E_H' },
+                        { text: '躺着或趴着为主', value: 'E_L' }
+                    ]},
+                    { dim: '能量水平', question: '遛狗时，它能走多久不累？', options: [
+                        { text: '一小时还不够，越遛越兴奋', value: 'E_H' },
+                        { text: '走两步就想回家', value: 'E_L' }
+                    ]},
+                    { dim: '能量水平', question: '你观察到的总活跃程度？', options: [
+                        { text: '超级活跃，是个运动健将', value: 'E_H' },
+                        { text: '一般活跃或偏安静', value: 'E_L' }
+                    ]},
+                    { dim: '能量水平', question: '在家时，它经常自己找乐子玩吗？', options: [
+                        { text: '叼玩具/拆家停不下来', value: 'E_H' },
+                        { text: '趴着发呆等主人', value: 'E_L' }
+                    ]},
+                    // 依赖程度 - 4题
+                    { dim: '依赖程度', question: '你下班回家，主子会？', options: [
+                        { text: '疯狂摇尾巴迎接，超热情', value: 'D_D' },
+                        { text: '淡定摇两下尾巴', value: 'D_I' }
+                    ]},
+                    { dim: '依赖程度', question: '你不在家时，它会拆家搞破坏吗？', options: [
+                        { text: '分离焦虑各种拆', value: 'D_D' },
+                        { text: '安安静静等主人', value: 'D_I' }
+                    ]},
+                    { dim: '依赖程度', question: '你在家的时候，它喜欢待在你附近吗？', options: [
+                        { text: '必须在你脚边才安心', value: 'D_D' },
+                        { text: '喜欢自己找地方待着', value: 'D_I' }
+                    ]},
+                    { dim: '依赖程度', question: '你出门一整天回来，主子会？', options: [
+                        { text: '激动转圈迎接，超兴奋', value: 'D_D' },
+                        { text: '淡定迎接但不疯狂', value: 'D_I' }
+                    ]},
+                    // 聪明程度 - 4题
+                    { dim: '聪明程度', question: '你家狗学新指令/技能快不快？', options: [
+                        { text: '教几遍就会举一反三', value: 'C_C' },
+                        { text: '怎么教都学不会', value: 'C_S' }
+                    ]},
+                    { dim: '聪明程度', question: '它会不会察言观色，看你心情？', options: [
+                        { text: '你难过它会安慰你', value: 'C_C' },
+                        { text: '完全不在意你心情', value: 'C_S' }
+                    ]},
+                    { dim: '聪明程度', question: '你观察到的总智商？', options: [
+                        { text: '很聪明，能听懂很多话', value: 'C_C' },
+                        { text: '傻乎乎的，很单纯', value: 'C_S' }
+                    ]},
+                    { dim: '聪明程度', question: '它会不会用各种方式引起你注意？', options: [
+                        { text: '叼玩具/蹭你/叫你来', value: 'C_C' },
+                        { text: '不会，自己待着', value: 'C_S' }
+                    ]}
+                ],
+                personalities: {
+                    'EADA': { type: '全能狗狗', subtitle: '完美狗狗，狗界天花板', desc: '你家狗简直是狗狗界的六边形战士！社交满分、精力充沛、粘人又聪明。出门是社交达人，回家是贴心小棉袄。养到这样的狗，上辈子一定拯救了银河系！', tips: '继续保持这份完美关系！多带它去狗公园发挥社交天赋，定期户外活动释放精力。训练它学习新技能满足智力需求。' },
+                    'EADS': { type: '活力小甜心', subtitle: '精力旺盛，粘人又可爱', desc: '你家狗是个活力满满的小可爱！每天像装了电池一样到处跑，但同时又超级粘你，是个离不开人的小跟班。智商可能一般，但那份热情和爱意是满分！', tips: '每天至少两次户外散步消耗精力。准备多个玩具让它发泄精力。多陪它玩，它最喜欢和你互动了！' },
+                    'EACD': { type: '活力小话痨', subtitle: '话多精力旺，爱凑热闹', desc: '你家狗是个话痨+人来疯的结合体！精力旺盛到可怕，一天到晚汪汪叫个不停。遛弯时见谁都想冲过去玩，精力永远用不完。', tips: '每天至少两次户外散步，每次30分钟以上。用捡球、接飞盘等游戏消耗精力。训练"安静"指令，改善过度吠叫。' },
+                    'EACS': { type: '淘气小恶魔', subtitle: '活泼好动，拆家小能手', desc: '你家狗是个小恶魔！精力旺盛到可怕，什么都要咬一咬、拆一拆。虽然经常闯祸，但那双真诚的大眼睛和永不枯竭的活力让你根本生不起气来。', tips: '多带它户外运动消耗精力。准备耐咬玩具满足破坏欲。训练时用零食效果更好。' },
+                    'EICI': { type: '探险大王', subtitle: '自信大胆，世界都是我的', desc: '你家狗是个天生的探险家！独立、自信、胆大包天。出门遛弯它要探索每一个角落，见什么闻什么。别的狗可能害怕的东西，它毫不畏惧。', tips: '带它去不同的地方遛弯满足探索欲。户外一定要牵绳！训练召回指令确保安全。准备户外玩具让它释放野性。' },
+                    'EICS': { type: '好奇宝宝', subtitle: '活泼好动，什么都想碰', desc: '你家狗对世界充满好奇，看见什么都要闻一闻、追一追。虽然经常因为太兴奋闯祸，但那双真诚的大眼睛让你根本生不起气来。', tips: '遛弯时给它探索的自由，但保持牵绳。准备各种玩具满足好奇心。训练时用零食效果更好。' },
+                    'ECDA': { type: '活力小棉袄', subtitle: '运动健将+粘人精', desc: '你家狗既有运动员的体魄，又有小棉袄的温暖！精力充沛但只粘着你，运动完了就要蹭你求抱抱。聪明又贴心，是狗界的完美组合。', tips: '准备各种运动玩具消耗精力。经常陪它互动玩耍。建立深厚的默契，它会很依赖你。' },
+                    'ECD': { type: '活力小天使', subtitle: '聪明活泼，完美小狗', desc: '你家狗简直是来报恩的！精力充沛但不会过度闹腾，聪明到能和你斗智斗勇，同时又很粘人。是那种别人看了都羡慕的完美小狗！', tips: '保持现状！它是完美的伙伴。多和它互动，建立更深的感情。' },
+                    'EQDA': { type: '小棉袄', subtitle: '安静陪伴，温暖治愈', desc: '你家狗是安静版的粘人精！不吵不闹但一定要待在你身边。你工作时它趴在你脚边陪着你，你休息时它安静地守在沙发旁。', tips: '给它准备一个靠近你的舒适垫子。户外活动量力而行，不需要太剧烈。珍惜这份安静的陪伴。' },
+                    'EQDC': { type: '安静天使', subtitle: '岁月静好，不争不抢', desc: '你家狗是来报恩的吧！安安静静、不吵不闹、不拆家不闹腾。遛弯时淡定散步，回家后岁月静好。乖巧得让人心疼。', tips: '保持现有的幸福生活！定期体检关注健康。适当陪伴互动，不要让它太孤单。' },
+                    'EQIC': { type: '独行智者', subtitle: '高冷有内涵，智商在线', desc: '你家狗是个有故事的大朋友！高冷、聪明、有主见。想理你的时候自然会来找你，不想理的时候叫破喉咙也没用。但它的聪明是真的，会用各种方式和你斗智斗勇。', tips: '尊重它的独立性，不要强迫互动。用零食和正向训练建立默契。户外牵绳，它可能有自己的想法不想听你的。' },
+                    'IQIC': { type: '高冷智者', subtitle: '独来独往，智商爆表', desc: '你家狗是个独行侠！智商高、性格独立，有自己的主见和想法。它不需要太多关注，但会用聪明的方式和你建立独特的默契。', tips: '尊重它的独立性。用零食和智慧收买它。不要强迫互动，让它按自己的节奏生活。' },
+                    'IAIS': { type: '活力独行侠', subtitle: '精力旺盛但不亲人', desc: '你家狗精力充沛得像装了马达，整天跑来跑去精力无限，但偏偏不太粘你。你想撸它它早就跑了，只有它想找你的时候才会过来。是个有活力但独立的小家伙。', tips: '每天多带它户外运动消耗精力。让它自己玩自己疯，尊重它的独立性。不要强迫互动。' },
+                    'IAIC': { type: '高冷运动员', subtitle: '聪明又活泼，就是高冷', desc: '你家狗是个聪明的小运动员！学东西快、反应敏捷、精力充沛。可惜性格高冷，不想理你的时候怎么叫都没用。它有自己的想法，是个难以捉摸的小家伙。', tips: '用零食和它斗智斗勇。建立平等的友谊，准备挑战性的训练满足它的智力需求。' },
+                    'IADC': { type: '粘人小傲娇', subtitle: '嘴硬心软，表面冷淡内心火热', desc: '你家狗是个矛盾体！表面对你爱答不理，实际上你走哪它跟到哪。在外面可能有点怂，但在家绝对离不开你。容易紧张但又渴望你的关注。', tips: '给它足够的安全感，不要强迫社交。陌生人接近时让它慢慢适应。多用零食和温柔语气建立信任。' },
+                    'IACS': { type: '社恐小可爱', subtitle: '害羞内敛，单纯可爱', desc: '你家狗是个害羞的小可爱！对外人很紧张，但对你是真爱。智商可能一般，但那份单纯的依赖让人心软。它需要你的保护和耐心陪伴。', tips: '给它足够的独处空间。不要强迫它见陌生人。在它熟悉的领域里陪伴它。' },
+                    'IQDS': { type: '超级跟屁虫', subtitle: '你是唯一，走哪跟哪', desc: '你家狗是重度分离焦虑症患者！你去倒水它跟着，你去厕所它在门口等。离开你三米就开始焦虑。它不需要狗朋友，有你就够了。', tips: '进行适当的分离训练，逐步延长离开时间。准备有你气味的衣物陪伴它。出门前不要过度告别，回家时平静打招呼。' },
+                    'IQIS': { type: '躺平之王', subtitle: '狗生如梦，能躺绝不坐', desc: '你家狗是狗界躺平代言人！能躺着绝不坐着，遛弯五分钟就往回走。对外界的一切都提不起兴趣，最大的爱好就是睡觉和干饭。', tips: '定期体检关注体重，保持健康饮食。不要强迫它运动，它选择躺平就让它躺。这也是它的快乐哲学。' },
+                    'IQIA': { type: '独行侠', subtitle: '独来独往，自由万岁', desc: '你家狗是个彻底的独行侠！不需要社交，不需要依赖，就喜欢自己待着。它有自己完整的精神世界，你是它的服务员而已。', tips: '尊重它的独立性。准备好食物和水就够了。不要试图强行互动，让它按自己的节奏生活。' }
+                }
+            },
+            bird: {
+                emoji: '🐦',
+                name: '鸟类',
+                questions: [
+                    // 社交模式 - 4题
+                    { dim: '社交模式', question: '你靠近鸟笼时，主子会？', options: [
+                        { text: '热情扑翅膀想出来', value: 'S_A' },
+                        { text: '躲到角落警惕', value: 'S_I' }
+                    ]},
+                    { dim: '社交模式', question: '你把手伸进笼子，主子会？', options: [
+                        { text: '跳到你手上/凑过来', value: 'S_A' },
+                        { text: '啄你或躲避', value: 'S_I' }
+                    ]},
+                    { dim: '社交模式', question: '有陌生人来，它反应大吗？', options: [
+                        { text: '激动叫个不停', value: 'S_A' },
+                        { text: '躲起来不敢出声', value: 'S_I' }
+                    ]},
+                    { dim: '社交模式', question: '它和其他鸟类相处得怎么样？', options: [
+                        { text: '喜欢和同类一起玩', value: 'S_A' },
+                        { text: '喜欢独处，不合群', value: 'S_I' }
+                    ]},
+                    // 能量水平 - 4题
+                    { dim: '能量水平', question: '早上它会叫个不停吗？', options: [
+                        { text: '天一亮就开始唱', value: 'E_H' },
+                        { text: '安安静静不吵人', value: 'E_L' }
+                    ]},
+                    { dim: '能量水平', question: '打开笼门，它会出来活动吗？', options: [
+                        { text: '立刻飞出来探索玩耍', value: 'E_H' },
+                        { text: '缩在角落不敢出', value: 'E_L' }
+                    ]},
+                    { dim: '能量水平', question: '它会自己玩玩具/啃东西吗？', options: [
+                        { text: '整天自己玩个不停', value: 'E_H' },
+                        { text: '看都不看一眼', value: 'E_L' }
+                    ]},
+                    { dim: '能量水平', question: '你和它互动时，它反应强烈吗？', options: [
+                        { text: '扑腾翅膀超兴奋', value: 'E_H' },
+                        { text: '淡定爱搭不理', value: 'E_L' }
+                    ]},
+                    // 依赖程度 - 4题
+                    { dim: '依赖程度', question: '你不在时，它会一直叫吗？', options: [
+                        { text: '没人就焦虑狂叫', value: 'D_D' },
+                        { text: '自己待着很安静', value: 'D_I' }
+                    ]},
+                    { dim: '依赖程度', question: '它喜欢待在你身上吗？', options: [
+                        { text: '必须站你肩上才安心', value: 'D_D' },
+                        { text: '只想回笼子待着', value: 'D_I' }
+                    ]},
+                    { dim: '依赖程度', question: '你每天和它互动多久？', options: [
+                        { text: '几个小时不停', value: 'D_D' },
+                        { text: '十分钟以内', value: 'D_I' }
+                    ]},
+                    { dim: '依赖程度', question: '见到你回来，它反应大吗？', options: [
+                        { text: '激动叫个不停欢迎你', value: 'D_D' },
+                        { text: '淡定看你一眼', value: 'D_I' }
+                    ]},
+                    // 聪明程度 - 4题
+                    { dim: '聪明程度', question: '它会学说话/吹口哨吗？', options: [
+                        { text: '会说几个词/会吹口哨', value: 'C_C' },
+                        { text: '怎么教都不会', value: 'C_S' }
+                    ]},
+                    { dim: '聪明程度', question: '它能记住你的手势或指令吗？', options: [
+                        { text: '能记住，很聪明', value: 'C_C' },
+                        { text: '怎么教都学不会', value: 'C_S' }
+                    ]},
+                    { dim: '聪明程度', question: '它会做简单的互动动作吗？', options: [
+                        { text: '会握手/转圈/跳到你手上', value: 'C_C' },
+                        { text: '教不会', value: 'C_S' }
+                    ]},
+                    { dim: '聪明程度', question: '它会看你脸色吗？', options: [
+                        { text: '你不开心它会安静下来', value: 'C_C' },
+                        { text: '完全不在意你的情绪', value: 'C_S' }
+                    ]}
+                ],
+                personalities: {
+                    'EADA': { type: '全能小鸟', subtitle: '完美小鸟，鸟界天花板', desc: '你家鸟简直是鸟界的六边形战士！亲人、活泼、粘人又聪明。会学说话，能察言观色，见人就热情。这样的鸟养起来幸福感爆棚，是主人炫耀的资本。', tips: '继续保持这份完美！多教它新技能，定期放出来飞行锻炼。给它准备各种玩具满足智力需求。' },
+                    'EADS': { type: '活力小甜心', subtitle: '精力旺盛，粘人又可爱', desc: '你家鸟是个活力满满的小可爱！精力充沛，整天扑腾翅膀探索世界，但同时又超级粘你，是个离不开人的小跟班。', tips: '每天多陪它互动，准备丰富的啃咬玩具让它发泄精力。多和它说话，它会学得很快！' },
+                    'EACD': { type: '话痨小歌手', subtitle: '行走的点唱机，叽喳不停', desc: '你家鸟是个行走的点唱机！精力旺盛，一整天叽叽喳喳叫个不停。早上叫醒你，晚上哄睡你，家里的背景音乐全靠它。', tips: '训练"安静"指令，设立固定的互动时间。准备各种啃咬玩具让它发泄精力。' },
+                    'EACS': { type: '好奇宝宝', subtitle: '看见什么都要研究一番', desc: '你家鸟对世界充满好奇，看见什么都要研究一番。手机、眼镜、遥控器都是它的玩具。虽然经常因为太好奇闯祸，但那双亮晶晶的眼睛让你根本舍不得凶它。', tips: '给它安全的啃咬玩具满足好奇心。每次互动前检查身上有没有它感兴趣的小物件。' },
+                    'EICI': { type: '探险小飞侠', subtitle: '活力满满，爱往外飞', desc: '你家鸟是个天生的飞行家！活力满满，笼门一开就往外冲。喜欢探索家里每个角落，什么都要咬一口。', tips: '放飞前确认门窗关好，收好危险物品和电线。飞行是它的天性，给它足够的飞行时间。' },
+                    'EICS': { type: '活泼小捣蛋', subtitle: '精力旺盛，爱搞破坏', desc: '你家鸟是个小捣蛋！精力旺盛到可怕，什么都要咬一咬、拆一拆。虽然经常闯祸，但那份活力让人忍不住喜欢它。', tips: '收好危险物品，准备耐咬玩具。给它足够的关注和互动，消耗精力。' },
+                    'ECDA': { type: '活力小棉袄', subtitle: '运动健将+粘人精', desc: '你家鸟既有运动员的体魄，又有小棉袄的温暖！精力充沛但只粘着你，飞完了就要蹭你求关注。', tips: '准备各种飞行和啃咬玩具。经常陪它互动玩耍，建立深厚的默契。' },
+                    'ECD': { type: '活力小天使', subtitle: '聪明活泼，完美小鸟', desc: '你家鸟简直是来报恩的！精力充沛但不会过度闹腾，聪明到能和你斗智斗勇，同时又很粘人。', tips: '保持现状！它是完美的伙伴。多和它互动，建立更深的感情。' },
+                    'EQDA': { type: '小棉袄', subtitle: '安静陪伴，温暖治愈', desc: '你家鸟是安静版的粘人精！不吵不闹但一定要待在你身边。你工作时它安静地陪着你，你休息时它乖巧地守在你肩头。', tips: '给它准备一个固定的舒适位置作为专属领地。互动时保持安静温和的语气。' },
+                    'EQDC': { type: '安静天使', subtitle: '岁月静好，乖巧可爱', desc: '你家鸟是来报恩的吧！安安静静、不吵不叫、乖巧可爱。别的鸟叽叽喳喳，它永远岁月静好。', tips: '保持安静稳定的环境，定期检查它的状态，它不叫可能是不舒服的信号。' },
+                    'EQIC': { type: '独行智者', subtitle: '高冷有主见，不想理就不理', desc: '你家鸟是个有故事的小家伙！高冷、有主见，不想理你的时候就完全无视你。但它的聪明是真的。', tips: '尊重它的独立性，建立平等的友谊。用零食和正向训练建立默契。' },
+                    'IQIC': { type: '高冷智者', subtitle: '独来独往，智商爆表', desc: '你家鸟是个独行侠！智商高、性格独立，有自己的主见和想法。', tips: '尊重它的独立性。用零食和智慧收买它。不要强迫互动。' },
+                    'IAIS': { type: '活力独行侠', subtitle: '精力旺盛但不亲人', desc: '你家鸟精力充沛，整天扑腾翅膀飞来飞去，但就是不太搭理人。它有自己的小世界，喜欢自己玩自己的。你叫它它可能看都不看你一眼，但那份活力绝对满分！', tips: '给它准备丰富的玩具和活动空间，让它自己消耗精力。不要强迫互动，它愿意亲近你的时候自然会的。' },
+                    'IAIC': { type: '高冷运动员', subtitle: '聪明又活泼，就是高冷', desc: '你家鸟是个聪明的小运动健将！学东西快、反应敏捷、精力充沛。可惜性格高冷，不想理你的时候怎么叫都没用。它有自己的想法，是个有个性的小家伙。', tips: '用零食和它斗智斗勇。建立平等的友谊，它会用自己的方式认可你。' },
+                    'IADC': { type: '傲娇小公主', subtitle: '嘴上说不要，身体很诚实', desc: '你家鸟是个矛盾体！嘴上说不要，身体很诚实。想让你陪但又装作不在乎，你一走开又叫个不停。', tips: '不要强迫它互动，让它按自己的节奏来接近你。多用零食和温柔语气建立信任。' },
+                    'IACS': { type: '社恐小可爱', subtitle: '害羞内敛，单纯可爱', desc: '你家鸟是个害羞的小可爱！对外人很紧张，但对你是真爱。智商可能一般，但那份单纯的依赖让人心软。', tips: '给它足够的独处空间。不要强迫它见陌生人。在它熟悉的领域里陪伴它。' },
+                    'IQDS': { type: '超级跟屁虫', subtitle: '重度分离焦虑，走哪跟哪', desc: '你家鸟是重度分离焦虑症患者！你走哪它跟到哪，你不在就叫个不停。', tips: '进行适当的分离训练，逐步延长离开时间。准备丰富的玩具分散注意力。' },
+                    'IQIS': { type: '躺平之王', subtitle: '鸟生如梦，能不动就不动', desc: '你家鸟是鸟界躺平代言人！能站着绝不飞，能不动绝不动。对外界的一切都提不起兴趣。', tips: '定期观察它的食欲和精神状态。提供多样化的食物和环境刺激。' },
+                    'IQIA': { type: '独行侠', subtitle: '独来独往，自由万岁', desc: '你家鸟是个彻底的独行侠！不需要社交，不需要依赖，就喜欢自己待着。', tips: '尊重它的独立性。准备好食物和水就够了。不要试图强行互动。' }
+                }
+            },
+            reptile: {
+                emoji: '🦎',
+                name: '爬宠',
+                questions: [
+                    // 社交模式 - 4题
+                    { dim: '社交模式', question: '你上手把玩时，它反应大吗？', options: [
+                        { text: '正常活动不紧张淡定', value: 'S_A' },
+                        { text: '缩成一团或想跑', value: 'S_I' }
+                    ]},
+                    { dim: '社交模式', question: '看到你靠近，它会主动过来吗？', options: [
+                        { text: '好奇爬过来看你', value: 'S_A' },
+                        { text: '缩在角落不动', value: 'S_I' }
+                    ]},
+                    { dim: '社交模式', question: '你清理箱子时，它会跑吗？', options: [
+                        { text: '淡定看你打扫', value: 'S_A' },
+                        { text: '到处乱窜想逃', value: 'S_I' }
+                    ]},
+                    { dim: '社交模式', question: '陌生人来看它，它反应大吗？', options: [
+                        { text: '该干嘛干嘛淡定', value: 'S_A' },
+                        { text: '躲起来不敢动', value: 'S_I' }
+                    ]},
+                    // 能量水平 - 4题
+                    { dim: '能量水平', question: '晚上它会活动吗？', options: [
+                        { text: '夜里满箱子跑', value: 'E_H' },
+                        { text: '一动不动睡觉', value: 'E_L' }
+                    ]},
+                    { dim: '能量水平', question: '喂食时，它反应强烈吗？', options: [
+                        { text: '立刻扑过来吃', value: 'E_H' },
+                        { text: '爱吃不吃的很淡定', value: 'E_L' }
+                    ]},
+                    { dim: '能量水平', question: '白天它经常出来晒灯吗？', options: [
+                        { text: '整天在晒点待着', value: 'E_H' },
+                        { text: '藏在躲避里不出来', value: 'E_L' }
+                    ]},
+                    { dim: '能量水平', question: '它会主动探索新环境吗？', options: [
+                        { text: '换东西就到处爬探索', value: 'E_H' },
+                        { text: '只待在一个地方', value: 'E_L' }
+                    ]},
+                    // 依赖程度 - 4题
+                    { dim: '依赖程度', question: '你多久和它互动一次？', options: [
+                        { text: '每天都要拿出来玩', value: 'D_D' },
+                        { text: '一周一次就行', value: 'D_I' }
+                    ]},
+                    { dim: '依赖程度', question: '你不在时，它状态会变差吗？', options: [
+                        { text: '不互动就不吃东西', value: 'D_D' },
+                        { text: '该吃吃该睡睡很独立', value: 'D_I' }
+                    ]},
+                    { dim: '依赖程度', question: '它会认主人吗？', options: [
+                        { text: '看到你就爬过来', value: 'D_D' },
+                        { text: '认不出谁是谁', value: 'D_I' }
+                    ]},
+                    { dim: '依赖程度', question: '你会把它拿出来陪你看电视吗？', options: [
+                        { text: '经常拿出来陪着玩', value: 'D_D' },
+                        { text: '放箱子里就好不打扰', value: 'D_I' }
+                    ]},
+                    // 聪明程度 - 4题
+                    { dim: '聪明程度', question: '它能记住自己的喂食时间吗？', options: [
+                        { text: '到点就在那等你', value: 'C_C' },
+                        { text: '什么都不知道随缘', value: 'C_S' }
+                    ]},
+                    { dim: '聪明程度', question: '清理箱子时它会配合吗？', options: [
+                        { text: '知道要回箱子里配合', value: 'C_C' },
+                        { text: '到处乱跑不配合', value: 'C_S' }
+                    ]},
+                    { dim: '聪明程度', question: '它有固定的活动路线吗？', options: [
+                        { text: '每天都走同一条路很规律', value: 'C_C' },
+                        { text: '到处乱爬没规律', value: 'C_S' }
+                    ]},
+                    { dim: '聪明程度', question: '它会对你有特殊反应吗？', options: [
+                        { text: '看到你就爬过来表示欢迎', value: 'C_C' },
+                        { text: '没什么特别反应', value: 'C_S' }
+                    ]}
+                ],
+                personalities: {
+                    'EADA': { type: '全能小宠', subtitle: '完美爬宠，爬宠界天花板', desc: '你家爬宠简直是爬宠界的六边形战士！互动性好、状态稳定、不挑环境还聪明。上手把玩不紧张，喂食积极反应快，还能认主人。养到这样的爬宠，是主人的福气。', tips: '继续保持这份完美！定期检查它的状态，保持环境稳定。可以尝试更多互动方式，满足它的探索欲。' },
+                    'EADS': { type: '活力小精灵', subtitle: '精力充沛，状态超好', desc: '你家爬宠是个活力满满的小精灵！精力充沛、吃嘛嘛香、状态超好。在它的领域里是最活跃的存在。', tips: '保持环境丰富多样，多放躲避和攀爬物。喂食时观察它的状态。' },
+                    'EACD': { type: '箱中小霸王', subtitle: '领地意识强，活动量惊人', desc: '你家爬宠是领地意识超强的霸道总裁！在自己的箱子里它就是老大，谁来都不怕。活动量大、吃嘛嘛香、精力充沛。', tips: '保持环境丰富多样，多放躲避和攀爬物。喂食时观察它的状态。' },
+                    'EACS': { type: '好奇宝宝', subtitle: '对外界充满好奇，探索欲强', desc: '你家爬宠对外界充满好奇！换一个新东西它就到处探索，喂食时反应超积极。虽然行动慢吞吞，但对新事物的兴趣比谁都认真。', tips: '偶尔改变箱内布置，给它新鲜感。喂食时可以用镊子逗逗它。' },
+                    'EICI': { type: '伪装大师', subtitle: '能不动就不动，偶尔动很优雅', desc: '你家爬宠是安静沉稳的伪装高手！平时一动不动，偶尔动一下也是优雅从容。养它让你学会了什么是真正的佛系。', tips: '不要因为它不动就担心，这是它的天性。保持温湿度稳定，定期喷水。' },
+                    'EICS': { type: '探险达人', subtitle: '行动派，喜欢探索', desc: '你家爬宠是个行动派！喜欢探索新环境，换了布置就到处爬。对外界充满好奇，是个活跃的小家伙。', tips: '偶尔改变箱内布置，给它新鲜感。喂食时观察它的探索行为。' },
+                    'ECDA': { type: '活力小棉袄', subtitle: '健康活泼+亲近人', desc: '你家爬宠既有活力又亲人！状态好、吃嘛嘛香，同时对你的存在也很敏感。', tips: '保持环境稳定。多和它互动，建立更深的默契。' },
+                    'ECD': { type: '完美小宠', subtitle: '健康聪明，状态满分', desc: '你家爬宠简直是完美的！状态健康、聪明伶俐，同时又很独立。是爬宠界的模范生。', tips: '保持现状！它是完美的伙伴。' },
+                    'EQDA': { type: '小棉袄', subtitle: '安静陪伴治愈系', desc: '你家爬宠是安静陪伴型的粘人精！虽然不会像猫狗那样热情，但它的存在本身就是一种治愈。', tips: '给它准备多个舒适的躲避，保持环境稳定。适当的互动就好。' },
+                    'EQDC': { type: '安静天使', subtitle: '岁月静好，与世无争', desc: '你家爬宠是箱中的岁月静好代言人！能不动就不动，喂食都不积极。养它让你学会了什么叫真正的佛系生活。', tips: '不要强迫它运动，只要状态健康就没问题。定期检查它的体重和进食量。' },
+                    'EQIC': { type: '独行智者', subtitle: '有自己想法，高冷有内涵', desc: '你家爬宠是个有内涵的小家伙！虽然不会表达，但它的行为很有规律。有自己的想法，高冷有内涵。', tips: '建立固定的喂食和互动时间表。尊重它的节奏，不要过度打扰。' },
+                    'IQIC': { type: '高冷智者', subtitle: '独立自主，智商在线', desc: '你家爬宠是个独立自主的小家伙！智商在线、有自己的节奏，不需要太多关注就能活得很好。', tips: '尊重它的独立性。准备好食物和环境就好。' },
+                    'IAIS': { type: '活力独行侠', subtitle: '状态活跃但不亲人', desc: '你家爬宠虽然精力充沛、状态活跃，但就是不太搭理人。喂食时反应积极，平时更喜欢自己待着探索。有活力但保持神秘感。', tips: '保持环境丰富多样，多放攀爬物和躲避让它探索。状态好就让它自己玩，不要强迫互动。' },
+                    'IAIC': { type: '高冷运动员', subtitle: '状态好又聪明，就是高冷', desc: '你家爬宠是个聪明的小健将！状态好、反应快、有自己的节奏。不像其他爬宠那样懒洋洋的，可惜性格高冷。', tips: '用喂食来建立互动。保持环境刺激，它会用自己的方式和你建立默契。' },
+                    'IADC': { type: '粘人小傲娇', subtitle: '表面冷冷的，其实需要你', desc: '你家爬宠是个矛盾体！表面上冷冷淡淡，实际上你在的时候它会更活跃。容易紧张但又有互动的需求。', tips: '互动时动作要慢要轻，让它慢慢适应。保持环境稳定，减少让它紧张的因素。' },
+                    'IACS': { type: '社恐小可爱', subtitle: '害羞内敛，需要耐心', desc: '你家爬宠是个害羞的小家伙！对外界反应敏感，容易紧张。需要主人耐心地慢慢接近。', tips: '互动时动作要慢。保持环境稳定，给它安全感。' },
+                    'IQDS': { type: '超级跟屁虫', subtitle: '对你的存在感很敏感', desc: '你家爬宠可能比你想象的更依赖你！虽然它们看起来冷冷淡淡，但其实对你的气味和存在感很敏感。', tips: '保持固定的照顾时间让它安心。互动时保持环境稳定。' },
+                    'IQIS': { type: '躺平之王', subtitle: '爬宠界躺平代言人', desc: '你家爬宠是爬宠界的躺平代言人！能不动就不动，能少吃就少吃。对外界刺激反应迟钝，最大的爱好就是睡觉和发呆。', tips: '定期检查它的体重和状态，只要健康就没问题。保持温湿度适宜。' },
+                    'IQIA': { type: '独行侠', subtitle: '独来独往，自由万岁', desc: '你家爬宠是个彻底的独行侠！不需要社交，不需要依赖，就喜欢自己待着。有自己完整的小世界。', tips: '尊重它的独立性。准备好食物和环境就够了。' }
+                }
+            }
+        };
+
+        // 养宠推荐数据
+        const recommendData = {
+            questions: [
+                { question: '你的日常作息比较？', options: [{ text: '规律稳定，朝九晚五', scores: { dog: 5 } }, { text: '不太规律，经常加班或出差', scores: { reptile: 3, bird: 2, cat: 2 } }] },
+                { question: '每天能花在宠物上的时间大概？', options: [{ text: '2小时以上，愿意陪玩互动', scores: { dog: 5, cat: 3 } }, { text: '1小时以内，比较忙', scores: { reptile: 5, bird: 3, cat: 2 } }] },
+                { question: '你住的环境面积？', options: [{ text: '80平以上，或有院子', scores: { dog: 5, cat: 2 } }, { text: '80平以下，或合租单间', scores: { reptile: 5, bird: 3, cat: 4 } }] },
+                { question: '你更享受哪种互动方式？', options: [{ text: '撸猫撸狗，有温度的肢体接触', scores: { cat: 2, dog: 2 } }, { text: '观赏为主，看它待着就很治愈', scores: { reptile: 1, bird: 1 } }] },
+                { question: '下班回家后，你希望宠物会？', options: [{ text: '热情迎接我，治愈一天疲惫', scores: { dog: 1, cat: 1 } }, { text: '各干各的，不需要太多互动', scores: { reptile: 1, bird: 1 } }] },
+                { question: '身边有人养宠物时，你会？', options: [{ text: '忍不住上手摸，很想rua', scores: { dog: 1, cat: 1 } }, { text: '远远看看就好，不太敢接触', scores: { reptile: 0, bird: 1 } }] },
+                { question: '你对宠物的预期是？', options: [{ text: '亲人、能互动、有反馈', scores: { dog: 1, cat: 1 } }, { text: '安静、不吵、好养活', scores: { reptile: 1, bird: 1 } }] },
+                { question: '你能接受宠物可能带来的？', options: [{ text: '掉毛、异味、偶尔搞破坏', scores: { dog: 1, cat: 1 } }, { text: '希望尽可能干净、安静', scores: { reptile: 1, bird: 1 } }] },
+                { question: '你之前有过养宠物的经历吗？', options: [{ text: '养过，能照顾好自己', scores: { dog: 1, cat: 1 } }, { text: '没养过，这是第一次', scores: { reptile: 1, bird: 1 } }] },
+                { question: '你更喜欢哪种动物？', options: [{ text: '毛茸茸的', scores: { cat: 2, dog: 2 } }, { text: '带羽毛/鳞片/甲壳的', scores: { bird: 1, reptile: 2 } }] }
+            ],
+            results: {
+                cat: {
+                    emoji: '🐱',
+                    name: '猫咪',
+                    type: '适合养猫',
+                    subtitle: '独立又治愈的陪伴',
+                    desc: '你很适合养一只猫咪！猫咪独立又傲娇，不需要你花太多时间陪伴，但又会在你回家时蹭蹭迎接。它们能治愈你一天的疲惫，又不会占用你太多私人时间。养猫让你享受陪伴的同时，也拥有自己的空间。',
+                    tips: '新手推荐英短、美短等温顺品种。记得准备猫砂盆、猫爬架，定期体检和驱虫。猫咪需要的是高质量陪伴，而不是长时间陪伴。'
+                },
+                dog: {
+                    emoji: '🐶',
+                    name: '狗狗',
+                    type: '适合养狗',
+                    subtitle: '热情忠诚的灵魂伴侣',
+                    desc: '你天生适合养狗！狗狗是人类最忠诚的朋友，它们热情、粘人、需要陪伴，正好和你喜欢互动的心一拍即合。你有足够的时间和耐心，能给予狗狗需要的运动和关爱。养狗会给你带来无尽的快乐和陪伴。',
+                    tips: '根据你的居住环境选择合适体型。大狗需要更多运动空间，小型犬适合城市生活。记得每天遛狗、定期洗澡、做好社会化训练。'
+                },
+                bird: {
+                    emoji: '🐦',
+                    name: '小鸟',
+                    type: '适合养鸟',
+                    subtitle: '会唱歌的快乐源泉',
+                    desc: '你很适合养一只小鸟！小鸟们羽毛漂亮、歌声动听，能给你的生活增添无限乐趣。它们不需要太大的空间，但能给你带来美妙的歌声和灵动的陪伴。养鸟让你享受观赏的乐趣，同时也不用花太多时间打理。',
+                    tips: '新手推荐虎皮鹦鹉或文鸟，容易饲养。准备好鸟笼、食物、玩具。注意保持环境清洁，避免冷风直吹。'
+                },
+                reptile: {
+                    emoji: '🦎',
+                    name: '爬宠',
+                    type: '适合养爬宠',
+                    subtitle: '独特另类的治愈伙伴',
+                    desc: '你很适合养爬宠！蜥蜴、守宫、龟类...这些独特的小家伙安静又省心，不需要每天遛，也不用担心掉毛。它们有着独特的魅力，静静观赏就能治愈心灵。养爬宠让你体验到一种与众不同的陪伴方式。',
+                    tips: '新手推荐豹纹守宫或睫角守宫，容易饲养。需要准备专用的饲养箱、温控设备、UVB灯等。学习相关知识后再入手。'
+                }
+            }
+        };
+
+        // 状态
+        let currentPet = null;
+        let currentQuestion = 0;
+        // 计分：记录每个维度的A面选择次数和有效题目数
+        let dimStats = {
+            social: { aCount: 0, validCount: 0 },      // 社交
+            energy: { aCount: 0, validCount: 0 },      // 能量
+            attach: { aCount: 0, validCount: 0 },      // 依赖
+            smart: { aCount: 0, validCount: 0 }        // 聪明
+        };
+        let testType = 'personality'; // 'personality' 或 'recommend'
+        let recommendScores = { cat: 0, dog: 0, bird: 0, reptile: 0 };
+
+        function selectPet(pet, element) {
+            currentPet = pet;
+            document.querySelectorAll('.pet-card').forEach(card => card.classList.remove('selected'));
+            element.classList.add('selected');
+            document.getElementById('startBtn').disabled = false;
+        }
+
+        function switchTestType(type, element) {
+            testType = type;
+            document.querySelectorAll('.test-type-tab').forEach(tab => tab.classList.remove('active'));
+            element.classList.add('active');
+
+            const introContent = document.getElementById('introContent');
+            const petGrid = document.querySelector('.pet-grid');
+
+            if (type === 'personality') {
+                introContent.innerHTML = `
+                    就像人类的MBTI一样<br>
+                    每只宠物都有独特的性格密码<br>
+                    <strong style="color:#DDA0DD">16道题</strong> 揭秘你家主子的真实性格
+                `;
+                document.querySelector('.logo p').textContent = '测测你家主子的独特性格';
+                petGrid.style.display = 'grid';
+                document.querySelector('.pet-grid').innerHTML = `
+                    <div class="pet-card" onclick="selectPet('cat', this)">
+                        <span class="emoji">🐱</span>
+                        <span class="name">猫咪</span>
+                    </div>
+                    <div class="pet-card" onclick="selectPet('dog', this)">
+                        <span class="emoji">🐶</span>
+                        <span class="name">狗狗</span>
+                    </div>
+                    <div class="pet-card" onclick="selectPet('bird', this)">
+                        <span class="emoji">🐦</span>
+                        <span class="name">鸟类</span>
+                    </div>
+                    <div class="pet-card" onclick="selectPet('reptile', this)">
+                        <span class="emoji">🦎</span>
+                        <span class="name">爬宠</span>
+                    </div>
+                `;
+                document.querySelector('#page-start p[style*="center"]').textContent = '先选择你家宠物的类型：';
+                document.getElementById('startBtn').textContent = '开始测试 →';
+            } else {
+                introContent.innerHTML = `
+                    想养宠物但不知道养什么？<br>
+                    根据你的生活方式和偏好<br>
+                    <strong style="color:#DDA0DD">10道题</strong> 推荐最适合你的宠物
+                `;
+                document.querySelector('.logo p').textContent = '帮你找到最合适的宠物';
+                petGrid.style.display = 'none';
+                document.getElementById('startBtn').textContent = '开始推荐 →';
+            }
+
+            // 重置状态
+            currentPet = null;
+            document.getElementById('startBtn').disabled = testType === 'recommend' ? false : true;
+        }
+
+        function startTest() {
+            document.getElementById('page-start').classList.remove('active');
+            document.getElementById('page-question').classList.add('active');
+            currentQuestion = 0;
+            // 重置维度统计
+            dimStats = {
+                social: { aCount: 0, validCount: 0 },
+                energy: { aCount: 0, validCount: 0 },
+                attach: { aCount: 0, validCount: 0 },
+                smart: { aCount: 0, validCount: 0 }
+            };
+            recommendScores = { cat: 0, dog: 0, bird: 0, reptile: 0 };
+
+            if (testType === 'personality') {
+                // 打乱题目顺序
+                const data = petData[currentPet];
+                data.questions = shuffleArray([...data.questions]);
+            }
+
+            showQuestion();
+        }
+
+        // 打乱数组顺序
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function showQuestion() {
+            let q, total;
+
+            if (testType === 'recommend') {
+                q = recommendData.questions[currentQuestion];
+                total = recommendData.questions.length;
+            } else {
+                const data = petData[currentPet];
+                q = data.questions[currentQuestion];
+                total = data.questions.length;
+            }
+
+            const progress = ((currentQuestion + 1) / total) * 100;
+
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('progressText').textContent = `第 ${currentQuestion + 1}/${total} 题`;
+            document.getElementById('questionText').textContent = q.question;
+
+            // 打乱选项顺序
+            const shuffledOptions = shuffleArray([...q.options]);
+
+            let optionsHtml;
+            if (testType === 'recommend') {
+                optionsHtml = shuffledOptions.map((opt, i) => `
+                    <div class="option" onclick="selectRecommendOption(${i}, this)">
+                        <div class="option-text">${opt.text}</div>
+                    </div>
+                `).join('');
+            } else {
+                optionsHtml = shuffledOptions.map((opt, i) => `
+                    <div class="option" onclick="selectOption('${opt.value}', this)">
+                        <div class="option-text">${opt.text}</div>
+                    </div>
+                `).join('');
+            }
+
+            document.getElementById('options').innerHTML = optionsHtml;
+        }
+
+        function selectRecommendOption(index, element) {
+            document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+
+            const opt = recommendData.questions[currentQuestion].options[index];
+            // 加分数
+            for (const [pet, score] of Object.entries(opt.scores)) {
+                recommendScores[pet] += score;
+            }
+
+            setTimeout(() => {
+                currentQuestion++;
+                const total = recommendData.questions.length;
+                if (currentQuestion >= total) {
+                    showRecommendResult();
+                } else {
+                    showQuestion();
+                }
+            }, 400);
+        }
+
+        function selectOption(value, element) {
+            document.querySelectorAll('.option').forEach(opt => opt.classList.remove('selected'));
+            element.classList.add('selected');
+
+            // 获取当前题目的维度
+            const currentQ = petData[currentPet].questions[currentQuestion];
+            const dim = currentQ.dim;
+
+            // 根据维度记录统计
+            if (dim === '社交模式') {
+                dimStats.social.validCount++;
+                if (value === 'S_A') dimStats.social.aCount++;
+            } else if (dim === '能量水平') {
+                dimStats.energy.validCount++;
+                if (value === 'E_H') dimStats.energy.aCount++;
+            } else if (dim === '依赖程度') {
+                dimStats.attach.validCount++;
+                if (value === 'D_D') dimStats.attach.aCount++;
+            } else if (dim === '聪明程度') {
+                dimStats.smart.validCount++;
+                if (value === 'C_C') dimStats.smart.aCount++;
+            }
+
+            setTimeout(() => {
+                currentQuestion++;
+                const total = petData[currentPet].questions.length;
+                if (currentQuestion >= total) {
+                    showResult();
+                } else {
+                    showQuestion();
+                }
+            }, 400);
+        }
+
+        function showRecommendResult() {
+            document.getElementById('page-question').classList.remove('active');
+            document.getElementById('page-result').classList.add('active');
+
+            // 找出最高分的宠物类型
+            let maxPet = 'cat';
+            let maxScore = 0;
+            for (const [pet, score] of Object.entries(recommendScores)) {
+                if (score > maxScore) {
+                    maxScore = score;
+                    maxPet = pet;
+                }
+            }
+
+            const result = recommendData.results[maxPet];
+
+            document.getElementById('resultEmoji').textContent = result.emoji;
+            document.getElementById('resultType').textContent = result.type;
+            document.getElementById('resultSubtitle').textContent = result.subtitle;
+            document.getElementById('resultDesc').textContent = result.desc;
+            document.getElementById('resultTips').textContent = result.tips;
+
+            // 显示各类型得分
+            const scoreHtml = `
+                <div class="score-item"><div class="score-label">🐱 猫咪</div><div class="score-value">${recommendScores.cat}分</div></div>
+                <div class="score-item"><div class="score-label">🐶 狗狗</div><div class="score-value">${recommendScores.dog}分</div></div>
+                <div class="score-item"><div class="score-label">🐦 鸟类</div><div class="score-value">${recommendScores.bird}分</div></div>
+                <div class="score-item"><div class="score-label">🦎 爬宠</div><div class="score-value">${recommendScores.reptile}分</div></div>
+            `;
+            document.getElementById('resultScore').innerHTML = scoreHtml;
+        }
+
+        function showResult() {
+            document.getElementById('page-question').classList.remove('active');
+            document.getElementById('page-result').classList.add('active');
+
+            // 计算最终分数（按比例）
+            const scoreSocial = dimStats.social.validCount > 0
+                ? (dimStats.social.aCount / dimStats.social.validCount) * 4 : 0;
+            const scoreEnergy = dimStats.energy.validCount > 0
+                ? (dimStats.energy.aCount / dimStats.energy.validCount) * 4 : 0;
+            const scoreAttach = dimStats.attach.validCount > 0
+                ? (dimStats.attach.aCount / dimStats.attach.validCount) * 4 : 0;
+            const scoreSmart = dimStats.smart.validCount > 0
+                ? (dimStats.smart.aCount / dimStats.smart.validCount) * 4 : 0;
+
+            const data = petData[currentPet];
+            
+            // 判断各维度高低
+            const socialHigh = scoreSocial >= 2;
+            const energyHigh = scoreEnergy >= 2;
+            const attachHigh = scoreAttach >= 2;
+            const smartHigh = scoreSmart >= 2;
+            
+            // 计算每个维度的得分
+            const getDimScore = (high) => high ? 'A' : 'I';
+            
+            // 生成精确key
+            const exactKey = (socialHigh ? 'E' : 'I') + 
+                           (energyHigh ? 'A' : 'Q') + 
+                           (attachHigh ? 'D' : 'I') + 
+                           (smartHigh ? 'C' : 'S');
+            
+            // 如果精确匹配存在，直接使用
+            if (data.personalities[exactKey]) {
+                var result = data.personalities[exactKey];
+            } else {
+                // 智能降级：三步走策略
+                
+                // 第一步：找出依赖维度匹配的类型
+                const attachMatchKeys = Object.keys(data.personalities).filter(key => {
+                    return (key[2] === 'D') === attachHigh;
+                });
+                
+                // 第二步：如果有依赖匹配的类型，再从中选社交+能量匹配最好的
+                if (attachMatchKeys.length > 0) {
+                    let bestMatch = null;
+                    let bestScore = -1;
+                    
+                    for (const key of attachMatchKeys) {
+                        let score = 0;
+                        // 社交匹配（权重2）
+                        if ((key[0] === 'E') === socialHigh) score += 2;
+                        // 能量匹配（权重2）
+                        if ((key[1] === 'A') === energyHigh) score += 2;
+                        // 聪明匹配（权重1）
+                        if ((key[3] === 'C') === smartHigh) score += 1;
+                        
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMatch = key;
+                        }
+                    }
+                    var result = data.personalities[bestMatch];
+                } else {
+                    // 第三步：如果没有依赖匹配，找社交+能量最好的
+                    let bestMatch = null;
+                    let bestScore = -1;
+                    
+                    for (const key of Object.keys(data.personalities)) {
+                        let score = 0;
+                        if ((key[0] === 'E') === socialHigh) score += 2;
+                        if ((key[1] === 'A') === energyHigh) score += 2;
+                        if ((key[3] === 'C') === smartHigh) score += 1;
+                        
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMatch = key;
+                        }
+                    }
+                    var result = data.personalities[bestMatch] || data.personalities['IQIS'];
+                }
+            }
+
+            document.getElementById('resultEmoji').textContent = data.emoji;
+            document.getElementById('resultType').textContent = result.type;
+            document.getElementById('resultSubtitle').textContent = result.subtitle;
+            document.getElementById('resultDesc').textContent = result.desc;
+            document.getElementById('resultTips').textContent = result.tips;
+
+            const scoreHtml = `
+                <div class="score-item"><div class="score-label">社交能力</div><div class="score-value">${scoreSocial.toFixed(1)}分</div></div>
+                <div class="score-item"><div class="score-label">能量指数</div><div class="score-value">${scoreEnergy.toFixed(1)}分</div></div>
+                <div class="score-item"><div class="score-label">依赖程度</div><div class="score-value">${scoreAttach.toFixed(1)}分</div></div>
+                <div class="score-item"><div class="score-label">聪明指数</div><div class="score-value">${scoreSmart.toFixed(1)}分</div></div>
+            `;
+            document.getElementById('resultScore').innerHTML = scoreHtml;
+        }
+
+        function shareResult() {
+            const resultType = document.getElementById('resultType').textContent;
+            const resultSubtitle = document.getElementById('resultSubtitle').textContent;
+            let shareText;
+
+            if (testType === 'recommend') {
+                shareText = `🏠 测试结果显示：${resultType}！${resultSubtitle}\n\n你想养宠物吗？测测最适合你的宠物是什么！`;
+            } else {
+                const petName = petData[currentPet].name;
+                shareText = `🐾 我的${petName}测出来是「${resultType}」！${resultSubtitle}\n\n来试试PBTI性格测试吧！`;
+            }
+
+            if (navigator.share) {
+                navigator.share({ title: 'PBTI测试', text: shareText, url: window.location.href });
+            } else {
+                navigator.clipboard.writeText(shareText).then(() => {
+                    alert('结果已复制到剪贴板，快去分享给朋友吧！🐾');
+                }).catch(() => {
+                    alert('请截图分享结果！🐾');
+                });
+            }
+        }
+
+        function retryTest() {
+            document.getElementById('page-result').classList.remove('active');
+            document.getElementById('page-start').classList.add('active');
+            currentPet = null;
+            currentQuestion = 0;
+            // 重置维度统计
+            dimStats = {
+                social: { aCount: 0, validCount: 0 },
+                energy: { aCount: 0, validCount: 0 },
+                attach: { aCount: 0, validCount: 0 },
+                smart: { aCount: 0, validCount: 0 }
+            };
+            recommendScores = { cat: 0, dog: 0, bird: 0, reptile: 0 };
+
+            // 如果当前是推荐模式，重置UI
+            if (testType === 'recommend') {
+                document.getElementById('startBtn').disabled = false;
+            } else {
+                document.querySelectorAll('.pet-card').forEach(card => card.classList.remove('selected'));
+                document.getElementById('startBtn').disabled = true;
+            }
+        }
+    </script>
+</body>
+</html>
